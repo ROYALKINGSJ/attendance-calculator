@@ -20,7 +20,8 @@ SCHEDULE_LIST = [
 # Total occurrences of each day in the semester (Mon, Tue, Wed, Thu, Fri)
 ADDITION_CONST_LIST = [15, 15, 13, 15, 12]
 
-SAFE_ATTENDANCE_PERCENTAGE = 75
+SAFE_ATTENDANCE_PERCENTAGE = st.number_input("Target Attendance Percentage", min_value=0, max_value=100, value=80)
+st.caption("We recommend at least 80% taking a 5% margin of error")
 
 # Initialize Dictionary for Totals
 subjects = ["CM", "ACE", "FEE", "OOPS", "EVS", "EMSB", "CAEG", "OOPS_LAB", "CPI", "DV_LAB"]
@@ -108,3 +109,8 @@ if st.button("Calculate Attendance", type="primary"):
 
     # Simple Summary
     st.caption(f"*Safe Bunks Left calculates how many more classes you can miss while staying above {SAFE_ATTENDANCE_PERCENTAGE}%.*")
+
+st.markdown(
+    "<div style='text-align: right; margin-top: 50px; color: gray;'>Made by Sanskar Jaiswal</div>",
+    unsafe_allow_html=True
+)
