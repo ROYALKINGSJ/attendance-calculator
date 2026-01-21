@@ -15,6 +15,7 @@ There is only one single file to read, i.e. the main python file named streamlit
 <br>
 
 Website : https://mit-leave-calculator.streamlit.app
+          https://sanskarjaiswal.in/
 
 # Libraries : Streamlit, Pandas
 # Please don't do unnecessary PR ☠️
