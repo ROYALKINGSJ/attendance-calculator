@@ -18,6 +18,8 @@
             --subtitle: #666;
             --shadow: rgba(0, 0, 0, 0.1);
             --note-warning: #e63946;
+            --tooltip-bg: #333;
+            --tooltip-text: #fff;
         }
 
         /* Dark Mode Override */
@@ -30,6 +32,8 @@
             --subtitle: #aaa;
             --shadow: rgba(0, 0, 0, 0.5);
             --note-warning: #ff6b6b;
+            --tooltip-bg: #fff;
+            --tooltip-text: #000;
         }
 
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; transition: background 0.3s, color 0.3s; }
@@ -40,7 +44,6 @@
         h1 { text-align: center; margin: 0 0 5px 0; font-size: 1.8rem; letter-spacing: -0.5px; }
         .subtitle { text-align: center; color: var(--subtitle); font-size: 0.9rem; margin-bottom: 5px; }
         
-        /* Specific Notes */
         .rec-note { font-size: 0.8rem; color: var(--subtitle); margin-top: 8px; font-style: italic; }
 
         /* Links & Buttons */
@@ -83,16 +86,72 @@
         /* Settings Section */
         .settings-box { background: rgba(67, 97, 238, 0.08); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(67, 97, 238, 0.2); }
         
-        /* Results */
+        /* Results Table */
         .result-box { margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px; animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { color: var(--subtitle); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        th { 
+            color: var(--subtitle); 
+            font-size: 0.8rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            position: relative; /* For tooltip positioning */
+        }
+        
         .safe { color: #2a9d8f; font-weight: bold; }
         .danger { color: #e63946; font-weight: bold; }
         .total-col { color: var(--subtitle); font-size: 0.85rem; }
+
+        /* --- TOOLTIP STYLES --- */
+        .info-icon {
+            display: inline-block;
+            margin-left: 4px;
+            cursor: help;
+            font-style: normal;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        .tooltip {
+            visibility: hidden;
+            width: 140px;
+            background-color: var(--tooltip-bg);
+            color: var(--tooltip-text);
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above */
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.7rem;
+            text-transform: none;
+            letter-spacing: normal;
+            font-weight: normal;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--tooltip-bg) transparent transparent transparent;
+        }
+
+        th:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
 
         .mode-content { display: none; }
         .mode-content.active { display: block; }
@@ -108,13 +167,12 @@
     </div>
 
     <h1>🎓 Attendance Manager</h1>
-    <p class="subtitle">MIT-Bengaluru Semester Planner</p>
+    <p class="subtitle">MIT Semester Planner</p>
     
     <div class="settings-box">
         <div class="input-group">
             <label for="sectionSelect">Select Your Section</label>
-            <select id="sectionSelect" onchange="loadSectionData()">
-                </select>
+            <select id="sectionSelect" onchange="loadSectionData()"></select>
         </div>
 
         <div class="input-group">
@@ -140,7 +198,8 @@
     </div>
 
     <div id="subjects" class="mode-content">
-        <div id="subjectInputs"></div> <button class="btn-calc" onclick="calculateBySubjects()">Calculate Attendance</button>
+        <div id="subjectInputs"></div>
+        <button class="btn-calc" onclick="calculateBySubjects()">Calculate Attendance</button>
     </div>
 
     <div id="output" class="result-box" style="display:none;">
@@ -148,11 +207,26 @@
         <table id="resultTable">
             <thead>
                 <tr>
-                    <th>Subject</th>
-                    <th>Total</th>
-                    <th>Att%</th>
-                    <th>Status</th>
-                    <th>Safe Bunks</th>
+                    <th>
+                        Subject
+                        <span class="info-icon">ⓘ<span class="tooltip">Name of the course code</span></span>
+                    </th>
+                    <th>
+                        Total
+                        <span class="info-icon">ⓘ<span class="tooltip">Total number of classes this semester</span></span>
+                    </th>
+                    <th>
+                        Att%
+                        <span class="info-icon">ⓘ<span class="tooltip">Your current projected attendance</span></span>
+                    </th>
+                    <th>
+                        Status
+                        <span class="info-icon">ⓘ<span class="tooltip">Are you above or below the target?</span></span>
+                    </th>
+                    <th>
+                        Safe Bunks
+                        <span class="info-icon">ⓘ<span class="tooltip">How many MORE classes you can skip safely</span></span>
+                    </th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -191,7 +265,7 @@
 
     const DAY_COUNTS = [15, 15, 13, 15, 12]; 
     
-    // Globals that change when section changes
+    // Globals
     let currentSchedule = [];
     let currentSubjects = [];
     let totalClasses = {};
@@ -199,7 +273,6 @@
     // --- INITIALIZATION ---
     window.onload = function() {
         populateSectionSelect();
-        // Default to Section A on load
         loadSectionData();
     };
 
@@ -217,7 +290,7 @@
         const section = document.getElementById('sectionSelect').value;
         currentSchedule = SECTION_DB[section];
         
-        // Extract unique subjects dynamically
+        // Extract unique subjects
         let subjectSet = new Set();
         currentSchedule.flat().forEach(sub => subjectSet.add(sub));
         currentSubjects = Array.from(subjectSet).sort();
@@ -233,10 +306,7 @@
             });
         });
 
-        // Re-render inputs for 'By Subject' mode
         renderSubjectInputs();
-        
-        // Hide previous results
         document.getElementById('output').style.display = 'none';
     }
 
@@ -260,7 +330,7 @@
 
     function renderSubjectInputs() {
         const subContainer = document.getElementById('subjectInputs');
-        subContainer.innerHTML = ""; // Clear old inputs
+        subContainer.innerHTML = ""; 
         currentSubjects.forEach(sub => {
             subContainer.innerHTML += `
                 <div class="input-group">
@@ -333,7 +403,6 @@
 
         daysMissed.forEach((count, dayIndex) => {
             if (count > 0) {
-                // Use currentSchedule (dynamic) instead of static
                 currentSchedule[dayIndex].forEach(sub => {
                     leaves[sub] += count;
                 });
