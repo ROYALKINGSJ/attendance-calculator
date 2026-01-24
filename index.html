@@ -41,7 +41,6 @@
         .subtitle { text-align: center; color: var(--subtitle); font-size: 0.9rem; margin-bottom: 5px; }
         
         /* Specific Notes */
-        .section-note { text-align: center; font-size: 0.85rem; color: var(--note-warning); background: rgba(230, 57, 70, 0.1); padding: 8px; border-radius: 6px; margin-bottom: 20px; font-weight: 500; }
         .rec-note { font-size: 0.8rem; color: var(--subtitle); margin-top: 8px; font-style: italic; }
 
         /* Links & Buttons */
@@ -56,11 +55,12 @@
         .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-weight: 600; color: var(--subtitle); transition: color 0.2s; }
         .tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         
-        /* Inputs */
+        /* Inputs & Selects */
         .input-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; }
-        input[type="number"] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text); font-size: 1rem; transition: border 0.2s; }
-        input[type="number"]:focus { outline: none; border-color: var(--primary); }
+        
+        input[type="number"], select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text); font-size: 1rem; transition: border 0.2s; }
+        input[type="number"]:focus, select:focus { outline: none; border-color: var(--primary); }
         
         /* Better Buttons */
         .btn-calc { 
@@ -98,9 +98,7 @@
         .mode-content.active { display: block; }
     </style>
 </head>
-<body class="dark-mode">
-
-<div class="container">
+<body class="dark-mode"> <div class="container">
     <div class="header-controls">
         <a href="https://github.com/ROYALKINGSJ/attendance-calculator" target="_blank" class="repo-link">
             <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
@@ -110,15 +108,20 @@
     </div>
 
     <h1>🎓 Attendance Manager</h1>
-    <p class="subtitle">MIT Semester Attendance Planner</p>
+    <p class="subtitle">MIT Semester Planner</p>
     
-    <div class="section-note">
-        ⚠️ Currently this website only works for F section 2nd semester students only
-    </div>
-
     <div class="settings-box">
-        <label for="targetPct">Target Percentage (%)</label>
-        <input type="number" id="targetPct" value="82" min="1" max="100" step="1" onkeypress="return isNumberKey(event)">
+        <div class="input-group">
+            <label for="sectionSelect">Select Your Section</label>
+            <select id="sectionSelect" onchange="loadSectionData()">
+                </select>
+        </div>
+
+        <div class="input-group">
+            <label for="targetPct">Target Percentage (%)</label>
+            <input type="number" id="targetPct" value="75" min="1" max="100" step="1" onkeypress="return isNumberKey(event)">
+        </div>
+        
         <p class="rec-note">💡 We recommend at least 82% for safe assumptions.</p>
     </div>
 
@@ -158,27 +161,84 @@
 </div>
 
 <script>
-    // --- CONFIGURATION ---
-    const SCHEDULE = [
-        ["EMSB", "OOPS", "CM", "ACE"],       // Mon
-        ["EVS", "CM", "EMSB", "FEE"],        // Tue
-        ["DV_LAB", "OOPS", "ACE", "FEE", "EVS"], // Wed
-        ["OOPS", "EMSB", "CM", "FEE", "OOPS_LAB"], // Thu
-        ["CAEG", "CM", "ACE", "CPI"]         // Fri
-    ];
+    // --- MASTER DATA (A to X) ---
+    const SECTION_DB = {
+        "A": [["FEE", "OOPS", "CPI", "CAEG_LAB"], ["OOPS_LAB", "EVS", "CM", "OOPS", "ACE"], ["FEE", "EVS", "CM", "EMSB", "DV_LAB"], ["ACE", "CM", "FEE", "EMSB"], ["EMSB", "CM", "OOPS", "ACE"]],
+        "B": [["DV_LAB", "OOPS", "ACE", "CM", "EMSB"], ["FEE", "EMSB", "OOPS", "ACE"], ["CAEG_LAB", "CM", "FEE", "EMSB"], ["OOPS", "EVS", "CM", "ACE"], ["OOPS_LAB", "FEE", "CM", "EVS", "CPI"]],
+        "C": [["CM", "OOPS", "CPI", "DV_LAB"], ["CAEG", "ACE", "EMSB", "OOPS", "CM"], ["FEE", "EVS", "EMSB", "ACE"], ["OOPS_LAB", "ACE", "CM", "FEE", "EVS"], ["FEE", "CM", "OOPS", "EMSB"]],
+        "D": [["OOPS", "EVS", "CM", "ACE"], ["FEE", "CM", "OOPS", "EMSB", "DV_LAB"], ["FEE", "EVS", "CM", "ACE"], ["OOPS", "EMSB", "CM", "CAEG_LAB"], ["OOPS_LAB", "EMSB", "ACE", "FEE", "CPI"]],
+        "E": [["CM", "OOPS", "CPI"], ["DV_LAB", "FEE", "ACE", "CM", "EMSB"], ["OOPS", "EVS", "CM", "ACE"], ["OOPS_LAB", "EVS", "EMSB", "FEE", "ACE"], ["CM", "EMSB", "OOPS", "FEE", "CAEG"]],
+        "F": [["EMSB", "OOPS", "CM", "ACE"], ["EVS", "CM", "EMSB", "FEE"], ["DV_LAB", "OOPS", "ACE", "FEE", "EVS"], ["OOPS", "EMSB", "CM", "FEE", "OOPS_LAB"], ["CAEG", "ACE", "CM", "CPI"]],
+        "G": [["ACE", "OOPS", "CPI", "DV_LAB"], ["OOPS", "ACE", "CM", "FEE"], ["FEE", "EVS", "CM", "EMSB"], ["CAEG", "EVS", "EMSB", "ACE", "CM"], ["CM", "FEE", "OOPS", "EMSB", "OOPS_LAB"]],
+        "H": [["OOPS", "EMSB", "CM", "ACE"], ["FEE", "EVS", "OOPS"], ["DV_LAB", "CM", "ACE", "FEE", "EVS"], ["OOPS", "EMSB", "CM", "ACE", "OOPS_LAB"], ["CAEG", "EMSB", "CM", "FEE", "CPI"]],
+        "I": [["FEE", "OOPS", "CPI", "CAEG"], ["EMSB", "CM", "OOPS", "ACE"], ["FEE", "EVS", "CM", "EMSB"], ["DV_LAB", "ACE", "EVS", "OOPS", "CM"], ["CM", "FEE", "EMSB", "ACE", "OOPS_LAB"]],
+        "J": [["CHEM_LAB", "BET", "MAT", "EVS", "PSUC"], ["PSUC", "BIO", "BET", "CHEM", "PSUC_LAB"], ["CHEM", "EVS", "BIO", "MAT"], ["BET", "BIO", "PSUC", "MAT", "CHEM_LAB"], ["EG_II_LAB", "CHEM", "MAT", "CPI"]],
+        "K": [["CHE", "MAT", "CPI", "CHEM_LAB"], ["PSUC_LAB", "MAT", "BIO", "BET", "EVS"], ["CHE", "PSUC", "BET", "BIO", "EG_II_LAB"], ["CHEM_LAB", "EVS", "MAT", "PSUC", "BET"], ["BIO", "MAT", "CHE", "PSUC"]],
+        "L": [["BIO", "PSUC", "BET", "MAT"], ["CHE", "BET", "MAT", "PSUC", "EG_II_LAB"], ["CHEM_LAB", "BET", "BIO", "CHE", "EVS"], ["MAT", "PSUC", "CHE", "PSUC_LAB"], ["CHEM_LAB", "MAT", "EVS", "BIO", "CPI"]],
+        "M": [["CM", "FE", "CPI", "BWP_LAB"], ["OOPS_LAB", "FME", "OOPS", "ENG", "APE"], ["CM", "FME", "FE", "OOPS", "DV_LAB"], ["FME", "FE", "CM", "APE"], ["ENG", "OOPS", "APE", "CM"]],
+        "N": [["BWP_LAB", "FE", "ENG", "CM", "OOPS"], ["CM", "APE", "FME", "OOPS_LAB"], ["APE", "OOPS", "FME", "FE"], ["CM", "FE", "APE", "OOPS", "DV_LAB"], ["FME", "CM", "ENG", "CPI"]],
+        "O": [["ENG", "APE", "CPI", "OOPS_LAB"], ["BWP_LAB", "FE", "OOPS", "APE", "CM"], ["CM", "FME", "FE", "OOPS"], ["ENG", "APE", "CM", "FME"], ["FE", "OOPS", "CM", "FME", "DV_LAB"]],
+        "P": [["OOPS_LAB", "CM", "APE", "FE", "OOPS"], ["FE", "ENG", "FME", "OOPS"], ["BWP_LAB", "CM", "FME", "ENG"], ["CM", "FE", "APE", "OOPS"], ["DV_LAB", "FME", "APE", "CM", "CPI"]],
+        "Q": [["APE", "OOPS", "CPI", "OOPS_LAB"], ["DV_LAB", "OOPS", "FME", "FE", "CM"], ["FE", "CM", "ENG", "OOPS", "BWP_LAB"], ["FME", "APE", "CM", "ENG"], ["FE", "FME", "CM", "APE"]],
+        "R": [["DV_LAB", "APE", "CM", "FME", "OOPS"], ["FME", "FE", "CM", "APE"], ["OOPS_LAB", "FME", "ENG", "FE", "OOPS"], ["CM", "APE", "ENG", "OOPS"], ["BWP_LAB", "FE", "CM", "CPI"]],
+        "S": [["CM", "FE", "CPI"], ["ENG", "OOPS", "FME", "FE"], ["CM", "OOPS", "APE", "FME", "OOPS_LAB"], ["BWP_LAB", "FME", "APE", "CM", "OOPS"], ["FE", "CM", "APE", "ENG", "DV_LAB"]],
+        "T": [["CM", "FME", "ENG", "OOPS"], ["FE", "OOPS", "CM", "FME"], ["OOPS_LAB", "FE", "OOPS", "APE", "CM"], ["APE", "ENG", "FE", "CM", "DV_LAB"], ["BWP_LAB", "FME", "APE", "CPI"]],
+        "U": [["CM", "FME", "CPI"], ["CM", "APE", "FE", "OOPS"], ["APE", "CM", "FE", "OOPS", "OOPS_LAB"], ["DV_LAB", "FME", "OOPS", "CM", "ENG"], ["FE", "APE", "ENG", "FME", "BWP_LAB"]],
+        "V": [["MOS", "ENG", "PHY", "MAT"], ["BME", "ENG", "BE", "MAT"], ["EG_II", "MOS", "BE", "BME", "PHY"], ["BE", "PHY", "MAT", "BWP"], ["PHY_LAB", "BME", "MOS", "MAT", "CPI"]],
+        "W": [["BE", "MOS", "CPI"], ["BWP", "BME", "MAT", "PHY"], ["PHY", "MAT", "ENG", "BE"], ["EG_II", "PHY", "BME", "ENG", "MAT", "MOS"], ["MOS", "BE", "BME", "MAT", "PHY_LAB"]],
+        "X": [["EG_II", "MAT", "PHY", "MOS", "BE"], ["BME", "MAT", "ENG", "PHY", "BWP"], ["PHY_LAB", "MOS", "BME", "ENG"], ["MAT", "PHY", "MOS", "BE"], ["BE", "MAT", "BME", "CPI"]]
+    };
+
     const DAY_COUNTS = [15, 15, 13, 15, 12]; 
-    const ALL_SUBJECTS = ["CM", "ACE", "FEE", "OOPS", "EVS", "EMSB", "CAEG", "OOPS_LAB", "CPI", "DV_LAB"];
-
-    // 1. Calculate Total Classes per Subject
+    
+    // Globals that change when section changes
+    let currentSchedule = [];
+    let currentSubjects = [];
     let totalClasses = {};
-    ALL_SUBJECTS.forEach(sub => totalClasses[sub] = 0);
 
-    SCHEDULE.forEach((dailySubjects, dayIndex) => {
-        let occurrences = DAY_COUNTS[dayIndex];
-        dailySubjects.forEach(sub => {
-            if (totalClasses[sub] !== undefined) totalClasses[sub] += occurrences;
+    // --- INITIALIZATION ---
+    window.onload = function() {
+        populateSectionSelect();
+        // Default to Section A on load
+        loadSectionData();
+    };
+
+    function populateSectionSelect() {
+        const select = document.getElementById('sectionSelect');
+        Object.keys(SECTION_DB).forEach(section => {
+            let option = document.createElement("option");
+            option.value = section;
+            option.text = "Section " + section;
+            select.appendChild(option);
         });
-    });
+    }
+
+    function loadSectionData() {
+        const section = document.getElementById('sectionSelect').value;
+        currentSchedule = SECTION_DB[section];
+        
+        // Extract unique subjects dynamically
+        let subjectSet = new Set();
+        currentSchedule.flat().forEach(sub => subjectSet.add(sub));
+        currentSubjects = Array.from(subjectSet).sort();
+
+        // Recalculate Totals
+        totalClasses = {};
+        currentSubjects.forEach(sub => totalClasses[sub] = 0);
+
+        currentSchedule.forEach((dailySubjects, dayIndex) => {
+            let occurrences = DAY_COUNTS[dayIndex];
+            dailySubjects.forEach(sub => {
+                if (totalClasses[sub] !== undefined) totalClasses[sub] += occurrences;
+            });
+        });
+
+        // Re-render inputs for 'By Subject' mode
+        renderSubjectInputs();
+        
+        // Hide previous results
+        document.getElementById('output').style.display = 'none';
+    }
 
     // --- UI HELPERS ---
     
@@ -198,15 +258,17 @@
         }
     }
 
-    // Generate inputs for "By Subject" mode
-    const subContainer = document.getElementById('subjectInputs');
-    ALL_SUBJECTS.forEach(sub => {
-        subContainer.innerHTML += `
-            <div class="input-group">
-                <label>${sub} Classes Skipped</label>
-                <input type="number" id="skip_${sub}" value="0" min="0" step="1" onkeypress="return isNumberKey(event)">
-            </div>`;
-    });
+    function renderSubjectInputs() {
+        const subContainer = document.getElementById('subjectInputs');
+        subContainer.innerHTML = ""; // Clear old inputs
+        currentSubjects.forEach(sub => {
+            subContainer.innerHTML += `
+                <div class="input-group">
+                    <label>${sub} Classes Skipped</label>
+                    <input type="number" id="skip_${sub}" value="0" min="0" step="1" onkeypress="return isNumberKey(event)">
+                </div>`;
+        });
+    }
 
     function switchTab(mode) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -231,7 +293,7 @@
         let safePctInput = parseInt(document.getElementById('targetPct').value);
         let SAFE_PCT = isNaN(safePctInput) ? 75 : safePctInput;
 
-        ALL_SUBJECTS.forEach(sub => {
+        currentSubjects.forEach(sub => {
             let total = totalClasses[sub];
             let skipped = leavesTaken[sub] || 0;
             let currentPct = total === 0 ? 0 : ((total - skipped) / total) * 100;
@@ -267,11 +329,12 @@
         ];
 
         let leaves = {};
-        ALL_SUBJECTS.forEach(sub => leaves[sub] = 0);
+        currentSubjects.forEach(sub => leaves[sub] = 0);
 
         daysMissed.forEach((count, dayIndex) => {
             if (count > 0) {
-                SCHEDULE[dayIndex].forEach(sub => {
+                // Use currentSchedule (dynamic) instead of static
+                currentSchedule[dayIndex].forEach(sub => {
                     leaves[sub] += count;
                 });
             }
@@ -282,8 +345,9 @@
 
     function calculateBySubjects() {
         let leaves = {};
-        ALL_SUBJECTS.forEach(sub => {
-            leaves[sub] = parseInt(document.getElementById(`skip_${sub}`).value) || 0;
+        currentSubjects.forEach(sub => {
+            let val = document.getElementById(`skip_${sub}`).value;
+            leaves[sub] = val ? parseInt(val) : 0;
         });
         generateResults(leaves);
     }
