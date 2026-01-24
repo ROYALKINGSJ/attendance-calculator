@@ -41,17 +41,44 @@
         
         /* Header & Controls */
         .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        
+        .top-btns { display: flex; gap: 8px; align-items: center; } /* Group buttons */
+
         h1 { text-align: center; margin: 0 0 5px 0; font-size: 1.8rem; letter-spacing: -0.5px; }
         .subtitle { text-align: center; color: var(--subtitle); font-size: 0.9rem; margin-bottom: 5px; }
         
         .rec-note { font-size: 0.8rem; color: var(--subtitle); margin-top: 8px; font-style: italic; }
 
-        /* Links & Buttons */
+        /* Links */
         .repo-link { font-size: 0.8rem; color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; }
         .repo-link:hover { text-decoration: underline; }
         
-        .theme-toggle { background: none; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; cursor: pointer; color: var(--text); font-size: 0.85rem; transition: all 0.2s; }
-        .theme-toggle:hover { background: var(--border); transform: translateY(-1px); }
+        /* Buttons (Toggle & Reset) */
+        .theme-toggle, .btn-reset { 
+            background: none; 
+            border: 1px solid var(--border); 
+            cursor: pointer; 
+            color: var(--text); 
+            transition: all 0.2s; 
+        }
+
+        .theme-toggle {
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            font-size: 0.85rem;
+        }
+
+        .btn-reset {
+            padding: 6px;
+            border-radius: 8px; /* Square look */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+        }
+
+        .theme-toggle:hover, .btn-reset:hover { background: var(--border); transform: translateY(-1px); }
 
         /* Tabs */
         .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
@@ -65,7 +92,7 @@
         input[type="number"], select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text); font-size: 1rem; transition: border 0.2s; }
         input[type="number"]:focus, select:focus { outline: none; border-color: var(--primary); }
         
-        /* Better Buttons */
+        /* Action Button */
         .btn-calc { 
             width: 100%; 
             padding: 14px; 
@@ -98,7 +125,7 @@
             font-size: 0.8rem; 
             text-transform: uppercase; 
             letter-spacing: 0.5px; 
-            position: relative; /* For tooltip positioning */
+            position: relative; 
         }
         
         .safe { color: #2a9d8f; font-weight: bold; }
@@ -106,52 +133,10 @@
         .total-col { color: var(--subtitle); font-size: 0.85rem; }
 
         /* --- TOOLTIP STYLES --- */
-        .info-icon {
-            display: inline-block;
-            margin-left: 4px;
-            cursor: help;
-            font-style: normal;
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
-        
-        .tooltip {
-            visibility: hidden;
-            width: 140px;
-            background-color: var(--tooltip-bg);
-            color: var(--tooltip-text);
-            text-align: center;
-            border-radius: 6px;
-            padding: 8px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%; /* Position above */
-            left: 50%;
-            margin-left: -70px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.7rem;
-            text-transform: none;
-            letter-spacing: normal;
-            font-weight: normal;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-        .tooltip::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: var(--tooltip-bg) transparent transparent transparent;
-        }
-
-        th:hover .tooltip {
-            visibility: visible;
-            opacity: 1;
-        }
+        .info-icon { display: inline-block; margin-left: 4px; cursor: help; font-style: normal; font-size: 0.9rem; opacity: 0.7; }
+        .tooltip { visibility: hidden; width: 140px; background-color: var(--tooltip-bg); color: var(--tooltip-text); text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -70px; opacity: 0; transition: opacity 0.3s; font-size: 0.7rem; text-transform: none; letter-spacing: normal; font-weight: normal; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--tooltip-bg) transparent transparent transparent; }
+        th:hover .tooltip { visibility: visible; opacity: 1; }
 
         .mode-content { display: none; }
         .mode-content.active { display: block; }
@@ -163,7 +148,13 @@
             <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
             GitHub Repo
         </a>
-        <button class="theme-toggle" onclick="toggleTheme()">☀️ Light Mode</button>
+        
+        <div class="top-btns">
+            <button class="btn-reset" onclick="resetApp()" title="Reset Everything">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            </button>
+            <button class="theme-toggle" onclick="toggleTheme()">☀️ Light Mode</button>
+        </div>
     </div>
 
     <h1>🎓 Attendance Manager</h1>
@@ -172,12 +163,12 @@
     <div class="settings-box">
         <div class="input-group">
             <label for="sectionSelect">Select Your Section</label>
-            <select id="sectionSelect" onchange="loadSectionData()"></select>
+            <select id="sectionSelect" onchange="saveAndLoadSection()"></select>
         </div>
 
         <div class="input-group">
             <label for="targetPct">Target Percentage (%)</label>
-            <input type="number" id="targetPct" value="82" min="1" max="100" step="1" onkeypress="return isNumberKey(event)">
+            <input type="number" id="targetPct" value="82" min="1" max="100" step="1" oninput="saveData()" onkeypress="return isNumberKey(event)">
         </div>
         
         <p class="rec-note">💡 We recommend at least 82% for safe assumptions.</p>
@@ -189,11 +180,11 @@
     </div>
 
     <div id="days" class="mode-content active">
-        <div class="input-group"><label>Mondays Missed</label><input type="number" id="mon" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
-        <div class="input-group"><label>Tuesdays Missed</label><input type="number" id="tue" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
-        <div class="input-group"><label>Wednesdays Missed</label><input type="number" id="wed" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
-        <div class="input-group"><label>Thursdays Missed</label><input type="number" id="thu" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
-        <div class="input-group"><label>Fridays Missed</label><input type="number" id="fri" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
+        <div class="input-group"><label>Mondays Missed</label><input type="number" id="mon" value="0" min="0" step="1" oninput="saveData()" onkeypress="return isNumberKey(event)"></div>
+        <div class="input-group"><label>Tuesdays Missed</label><input type="number" id="tue" value="0" min="0" step="1" oninput="saveData()" onkeypress="return isNumberKey(event)"></div>
+        <div class="input-group"><label>Wednesdays Missed</label><input type="number" id="wed" value="0" min="0" step="1" oninput="saveData()" onkeypress="return isNumberKey(event)"></div>
+        <div class="input-group"><label>Thursdays Missed</label><input type="number" id="thu" value="0" min="0" step="1" oninput="saveData()" onkeypress="return isNumberKey(event)"></div>
+        <div class="input-group"><label>Fridays Missed</label><input type="number" id="fri" value="0" min="0" step="1" oninput="saveData()" onkeypress="return isNumberKey(event)"></div>
         <button class="btn-calc" onclick="calculateByDays()">Calculate Attendance</button>
     </div>
 
@@ -207,26 +198,11 @@
         <table id="resultTable">
             <thead>
                 <tr>
-                    <th>
-                        Subject
-                        <span class="info-icon">ⓘ<span class="tooltip">Name of the course code</span></span>
-                    </th>
-                    <th>
-                        Total
-                        <span class="info-icon">ⓘ<span class="tooltip">Total number of classes this semester</span></span>
-                    </th>
-                    <th>
-                        Att%
-                        <span class="info-icon">ⓘ<span class="tooltip">Your current projected attendance</span></span>
-                    </th>
-                    <th>
-                        Status
-                        <span class="info-icon">ⓘ<span class="tooltip">Are you above or below the target?</span></span>
-                    </th>
-                    <th>
-                        Safe Bunks
-                        <span class="info-icon">ⓘ<span class="tooltip">How many MORE classes you can skip safely</span></span>
-                    </th>
+                    <th>Subject <span class="info-icon">ⓘ<span class="tooltip">Name of the course code</span></span></th>
+                    <th>Total <span class="info-icon">ⓘ<span class="tooltip">Total number of classes this semester</span></span></th>
+                    <th>Att% <span class="info-icon">ⓘ<span class="tooltip">Your current projected attendance</span></span></th>
+                    <th>Status <span class="info-icon">ⓘ<span class="tooltip">Are you above or below the target?</span></span></th>
+                    <th>Safe Bunks <span class="info-icon">ⓘ<span class="tooltip">How many MORE classes you can skip safely</span></span></th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -265,17 +241,120 @@
 
     const DAY_COUNTS = [15, 15, 13, 15, 12]; 
     
-    // Globals
     let currentSchedule = [];
     let currentSubjects = [];
     let totalClasses = {};
 
-    // --- INITIALIZATION ---
     window.onload = function() {
         populateSectionSelect();
-        loadSectionData();
+        loadSavedData();
     };
 
+    // --- RESET APP LOGIC ---
+    function resetApp() {
+        if(confirm("Reset all settings to default (Light Mode, 82%)?")) {
+            // 1. Clear Storage
+            localStorage.removeItem('mit_calc_save');
+            
+            // 2. Reset Theme to Light Mode (remove dark class)
+            document.body.classList.remove('dark-mode');
+            document.querySelector('.theme-toggle').innerHTML = "🌙 Dark Mode";
+
+            // 3. Reset Section to A
+            document.getElementById('sectionSelect').value = "A";
+            
+            // 4. Reset Percentage to 82
+            document.getElementById('targetPct').value = 82;
+            
+            // 5. Reset Days Inputs to 0
+            document.getElementById('mon').value = 0;
+            document.getElementById('tue').value = 0;
+            document.getElementById('wed').value = 0;
+            document.getElementById('thu').value = 0;
+            document.getElementById('fri').value = 0;
+
+            // 6. Reload Data (rebuilds subject inputs with 0s)
+            loadSectionData();
+
+            // 7. Hide Output
+            document.getElementById('output').style.display = 'none';
+        }
+    }
+
+    // --- SAVE & LOAD ---
+    function saveData() {
+        const data = {
+            theme: document.body.classList.contains('dark-mode') ? 'dark' : 'light',
+            section: document.getElementById('sectionSelect').value,
+            targetPct: document.getElementById('targetPct').value,
+            days: {
+                mon: document.getElementById('mon').value,
+                tue: document.getElementById('tue').value,
+                wed: document.getElementById('wed').value,
+                thu: document.getElementById('thu').value,
+                fri: document.getElementById('fri').value
+            },
+            subjects: {}
+        };
+        currentSubjects.forEach(sub => {
+            const el = document.getElementById(`skip_${sub}`);
+            if (el) data.subjects[sub] = el.value;
+        });
+        localStorage.setItem('mit_calc_save', JSON.stringify(data));
+    }
+
+    function loadSavedData() {
+        const saved = localStorage.getItem('mit_calc_save');
+        if (!saved) { loadSectionData(); return; }
+
+        const data = JSON.parse(saved);
+
+        // Theme
+        if (data.theme === 'light') {
+            document.body.classList.remove('dark-mode');
+            document.querySelector('.theme-toggle').innerHTML = "🌙 Dark Mode";
+        } else {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-toggle').innerHTML = "☀️ Light Mode";
+        }
+
+        // Section
+        if (data.section) {
+            const select = document.getElementById('sectionSelect');
+            if (select.querySelector(`option[value="${data.section}"]`)) {
+                select.value = data.section;
+            }
+        }
+        
+        loadSectionData();
+
+        // Percentage
+        if (data.targetPct) document.getElementById('targetPct').value = data.targetPct;
+
+        // Days
+        if (data.days) {
+            document.getElementById('mon').value = data.days.mon || 0;
+            document.getElementById('tue').value = data.days.tue || 0;
+            document.getElementById('wed').value = data.days.wed || 0;
+            document.getElementById('thu').value = data.days.thu || 0;
+            document.getElementById('fri').value = data.days.fri || 0;
+        }
+
+        // Subjects
+        if (data.subjects) {
+            Object.keys(data.subjects).forEach(sub => {
+                const el = document.getElementById(`skip_${sub}`);
+                if (el) el.value = data.subjects[sub];
+            });
+        }
+    }
+
+    function saveAndLoadSection() {
+        loadSectionData();
+        saveData();
+    }
+
+    // --- STANDARD FUNCTIONS ---
     function populateSectionSelect() {
         const select = document.getElementById('sectionSelect');
         Object.keys(SECTION_DB).forEach(section => {
@@ -290,12 +369,10 @@
         const section = document.getElementById('sectionSelect').value;
         currentSchedule = SECTION_DB[section];
         
-        // Extract unique subjects
         let subjectSet = new Set();
         currentSchedule.flat().forEach(sub => subjectSet.add(sub));
         currentSubjects = Array.from(subjectSet).sort();
 
-        // Recalculate Totals
         totalClasses = {};
         currentSubjects.forEach(sub => totalClasses[sub] = 0);
 
@@ -310,8 +387,6 @@
         document.getElementById('output').style.display = 'none';
     }
 
-    // --- UI HELPERS ---
-    
     function isNumberKey(evt) {
         var charCode = (evt.which) ? evt.which : evt.keyCode;
         if (charCode > 31 && (charCode < 48 || charCode > 57)) return false;
@@ -326,6 +401,7 @@
         } else {
             btn.innerHTML = "🌙 Dark Mode";
         }
+        saveData();
     }
 
     function renderSubjectInputs() {
@@ -335,7 +411,7 @@
             subContainer.innerHTML += `
                 <div class="input-group">
                     <label>${sub} Classes Skipped</label>
-                    <input type="number" id="skip_${sub}" value="0" min="0" step="1" onkeypress="return isNumberKey(event)">
+                    <input type="number" id="skip_${sub}" value="0" min="0" step="1" oninput="saveData()" onkeypress="return isNumberKey(event)">
                 </div>`;
         });
     }
@@ -354,8 +430,6 @@
         document.getElementById('output').style.display = 'none';
     }
 
-    // --- CALCULATION LOGIC ---
-
     function generateResults(leavesTaken) {
         let tbody = document.querySelector('#resultTable tbody');
         tbody.innerHTML = "";
@@ -368,7 +442,6 @@
             let skipped = leavesTaken[sub] || 0;
             let currentPct = total === 0 ? 0 : ((total - skipped) / total) * 100;
             
-            // Safe Bunk Logic
             let safeBunks = 0;
             if (currentPct >= SAFE_PCT) {
                 safeBunks = Math.floor(((currentPct - SAFE_PCT) / 100) * total);
@@ -390,6 +463,7 @@
     }
 
     function calculateByDays() {
+        saveData();
         let daysMissed = [
             parseInt(document.getElementById('mon').value) || 0,
             parseInt(document.getElementById('tue').value) || 0,
@@ -413,6 +487,7 @@
     }
 
     function calculateBySubjects() {
+        saveData();
         let leaves = {};
         currentSubjects.forEach(sub => {
             let val = document.getElementById(`skip_${sub}`).value;
