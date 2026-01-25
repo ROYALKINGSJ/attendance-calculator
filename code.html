@@ -111,6 +111,7 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            cursor: pointer; /* Ensure pointer for buttons */
         }
         .icon-btn:hover { background: var(--bg); border-color: var(--subtitle); }
         .btn-view { color: var(--primary); border-color: var(--primary); }
@@ -152,7 +153,7 @@
     const REPO_USER = "ROYALKINGSJ";
     const REPO_NAME = "mit-attendance-calculator";
     const BRANCH = "main";
-    const SAVE_KEY = 'mit_calc_save'; // Shared Storage Key
+    const SAVE_KEY = 'mit_calc_save'; 
     
     // Define the Weeks and their Files
     const DATA = {
@@ -193,11 +194,40 @@
         const btn = document.querySelector('.theme-toggle');
         btn.innerHTML = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
 
-        // Read existing data, update ONLY theme, and save back
         const saved = localStorage.getItem(SAVE_KEY);
         let data = saved ? JSON.parse(saved) : {};
         data.theme = isDark ? 'dark' : 'light';
         localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    }
+
+    // --- FORCE DOWNLOAD FUNCTION (FIXED) ---
+    async function downloadRaw(url, filename) {
+        try {
+            // 1. Fetch the code as text
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Network response was not ok");
+            const text = await response.text();
+
+            // 2. Create a "Blob" (File object)
+            const blob = new Blob([text], { type: 'text/plain' });
+            
+            // 3. Create a temporary link to that Blob
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename; // This attribute forces download
+            
+            // 4. Click it and cleanup
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+
+        } catch (error) {
+            console.error("Download failed:", error);
+            alert("Download failed. Opening in new tab instead.");
+            window.open(url, '_blank');
+        }
     }
 
     // --- RENDER LOGIC ---
@@ -211,12 +241,13 @@
                 const viewLink = `https://github.com/${REPO_USER}/${REPO_NAME}/blob/${BRANCH}/${week.folder}/${file}`;
                 const rawLink = `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/${BRANCH}/${week.folder}/${file}`;
                 
+                // FIXED: Changed href to javascript:void(0) and added onclick to use our new function
                 fileRowsHTML += `
                 <div class="file-row">
                     <span class="file-name">📄 ${file}</span>
                     <div class="file-actions">
                         <a href="${viewLink}" target="_blank" class="icon-btn btn-view">👁️ View</a>
-                        <a href="${rawLink}" download class="icon-btn">⬇️ DL</a>
+                        <a href="javascript:void(0)" onclick="downloadRaw('${rawLink}', '${file}')" class="icon-btn">⬇️ DL</a>
                     </div>
                 </div>`;
             });
@@ -254,7 +285,7 @@
 
     // Init
     window.onload = function() {
-        loadTheme(); // Load the shared theme preference
+        loadTheme(); 
         renderPython();
     };
 </script>
