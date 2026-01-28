@@ -17,7 +17,7 @@ public class WEEK_1_1 {
         if (Hours_Worked <= 40) {
             Salary = (Hours_Worked * Rate_Per_Hour);
         }
-        else if (Hours_Worked > 40);{
+        else if (Hours_Worked > 40){
             Salary = (40 * Rate_Per_Hour) + ((Hours_Worked - 40) * (Rate_Per_Hour / 2));
         }
 
