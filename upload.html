@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Cloud Storage</title>
+    <link rel="icon" href="https://fav.farm/☁️" />
+    <style>
+        /* --- CSS STYLES (Matches your Dark Mode theme) --- */
+        :root {
+            --primary: #4361ee;
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e0e0e0;
+            --border: #333;
+            --subtitle: #aaa;
+            --danger: #e63946;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card); width: 100%; max-width: 500px; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+        
+        h1 { margin: 0 0 10px 0; }
+        .subtitle { color: var(--subtitle); font-size: 0.9rem; margin-bottom: 25px; }
+        
+        input { width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d; border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box; }
+        
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
+        button.secondary { background: var(--border); margin-top: 10px; }
+        
+        /* App States */
+        #auth-view, #app-view { display: none; }
+        .visible { display: block !important; }
+
+        /* File List */
+        .file-list { margin-top: 20px; text-align: left; max-height: 300px; overflow-y: auto; }
+        .file-item { background: #2d2d2d; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+        .file-link { color: var(--primary); text-decoration: none; word-break: break-all; margin-right: 10px; }
+        .file-info { font-size: 0.75rem; color: var(--subtitle); }
+        
+        /* Loading Bar */
+        #progress-container { width: 100%; background: #333; height: 6px; border-radius: 3px; margin-top: 15px; display: none; }
+        #progress-bar { height: 100%; background: var(--primary); width: 0%; border-radius: 3px; transition: width 0.2s; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="auth-view" class="visible">
+        <h1>🔐 Student Login</h1>
+        <p class="subtitle">Secure secure temporary storage (24h)</p>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Log In</button>
+        <button class="secondary" onclick="register()">Create Account</button>
+        <p id="auth-error" style="color: var(--danger); font-size: 0.9rem; margin-top: 10px;"></p>
+        <a href="index.html" style="color: var(--subtitle); font-size: 0.8rem; display:block; margin-top: 15px;">← Back to Home</a>
+    </div>
+
+    <div id="app-view">
+        <h1>☁️ My Cloud</h1>
+        <p class="subtitle" id="user-display"></p>
+        
+        <div style="border: 2px dashed var(--border); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            <input type="file" id="file-input" style="display:none" onchange="handleFileSelect()">
+            <button class="secondary" onclick="document.getElementById('file-input').click()" style="width:auto; margin:0;">Select File (Max 25MB)</button>
+            <p id="selected-file" style="margin: 10px 0 0 0; font-size: 0.9rem; font-style: italic;"></p>
+            <div id="progress-container"><div id="progress-bar"></div></div>
+            <button onclick="uploadFile()" id="upload-btn" style="display:none;">⬆️ Upload Now</button>
+        </div>
+
+        <h3>My Files</h3>
+        <div id="file-list" class="file-list">
+            <div style="text-align:center; color: #666;">Loading files...</div>
+        </div>
+
+        <button class="secondary" onclick="logout()">Log Out</button>
+    </div>
+</div>
+
+<script type="module">
+    // Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+    // YOUR CONFIG
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZGKhujRSWevfIIuGkDp1wXJ3ZpUgh_aM",
+      authDomain: "mit-student-hub.firebaseapp.com",
+      projectId: "mit-student-hub",
+      storageBucket: "mit-student-hub.firebasestorage.app",
+      messagingSenderId: "293801887483",
+      appId: "1:293801887483:web:31894382241e2535bcd25e"
+    };
+
+    // Initialize
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    // --- AUTH LOGIC ---
+    window.login = async () => {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch (error) {
+            document.getElementById('auth-error').innerText = error.message;
+        }
+    };
+
+    window.register = async () => {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        try {
+            await createUserWithEmailAndPassword(auth, email, pass);
+        } catch (error) {
+            document.getElementById('auth-error').innerText = error.message;
+        }
+    };
+
+    window.logout = () => signOut(auth);
+
+    // Monitor Login State
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('auth-view').classList.remove('visible');
+            document.getElementById('app-view').classList.add('visible');
+            document.getElementById('user-display').innerText = user.email;
+            loadFiles(user.uid); // Load user's files
+        } else {
+            document.getElementById('app-view').classList.remove('visible');
+            document.getElementById('auth-view').classList.add('visible');
+            document.getElementById('file-list').innerHTML = "";
+        }
+    });
+
+    // --- UPLOAD LOGIC ---
+    let selectedFile = null;
+
+    window.handleFileSelect = () => {
+        const file = document.getElementById('file-input').files[0];
+        if (!file) return;
+
+        // 25MB Limit Check
+        if (file.size > 25 * 1024 * 1024) {
+            alert("File is too big! Max 25MB.");
+            return;
+        }
+        
+        selectedFile = file;
+        document.getElementById('selected-file').innerText = file.name;
+        document.getElementById('upload-btn').style.display = 'block';
+    }
+
+    window.uploadFile = () => {
+        if (!selectedFile) return;
+        const user = auth.currentUser;
+        if (!user) return;
+
+        // Create a unique path: uploads/USER_ID/FILE_NAME
+        const storageRef = ref(storage, `uploads/${user.uid}/${selectedFile.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+
+        document.getElementById('progress-container').style.display = 'block';
+
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                document.getElementById('progress-bar').style.width = progress + '%';
+            }, 
+            (error) => {
+                alert("Upload failed: " + error.message);
+            }, 
+            () => {
+                // Upload complete
+                alert("Upload Successful!");
+                document.getElementById('progress-container').style.display = 'none';
+                document.getElementById('upload-btn').style.display = 'none';
+                document.getElementById('selected-file').innerText = "";
+                selectedFile = null;
+                loadFiles(user.uid); // Refresh list
+            }
+        );
+    };
+
+    // --- LIST FILES LOGIC ---
+    function loadFiles(uid) {
+        const listRef = ref(storage, `uploads/${uid}`);
+        const listContainer = document.getElementById('file-list');
+        listContainer.innerHTML = '<div style="text-align:center; color:#666">Loading...</div>';
+
+        listAll(listRef).then((res) => {
+            listContainer.innerHTML = "";
+            if (res.items.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; color:#666">No files yet.</div>';
+                return;
+            }
+
+            res.items.forEach((itemRef) => {
+                getDownloadURL(itemRef).then((url) => {
+                    listContainer.innerHTML += `
+                        <div class="file-item">
+                            <a href="${url}" target="_blank" class="file-link">📄 ${itemRef.name}</a>
+                        </div>`;
+                });
+            });
+        }).catch((error) => {
+            console.error(error);
+            listContainer.innerHTML = '<div style="text-align:center; color:red">Error loading files</div>';
+        });
+    }
+</script>
+
+</body>
+</html>
