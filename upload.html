@@ -6,7 +6,7 @@
     <title>Student Cloud Storage</title>
     <link rel="icon" href="https://fav.farm/☁️" />
     <style>
-        /* --- CSS STYLES (Matches your Dark Mode theme) --- */
+        /* --- CSS STYLES --- */
         :root {
             --primary: #4361ee;
             --bg: #121212;
@@ -22,6 +22,7 @@
         h1 { margin: 0 0 10px 0; }
         .subtitle { color: var(--subtitle); font-size: 0.9rem; margin-bottom: 25px; }
         
+        /* Changed input type to text for App Number */
         input { width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d; border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box; }
         
         button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: opacity 0.2s; }
@@ -36,7 +37,6 @@
         .file-list { margin-top: 20px; text-align: left; max-height: 300px; overflow-y: auto; }
         .file-item { background: #2d2d2d; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
         .file-link { color: var(--primary); text-decoration: none; word-break: break-all; margin-right: 10px; }
-        .file-info { font-size: 0.75rem; color: var(--subtitle); }
         
         /* Loading Bar */
         #progress-container { width: 100%; background: #333; height: 6px; border-radius: 3px; margin-top: 15px; display: none; }
@@ -48,9 +48,11 @@
 <div class="container">
     <div id="auth-view" class="visible">
         <h1>🔐 Student Login</h1>
-        <p class="subtitle">Secure secure temporary storage (24h)</p>
-        <input type="email" id="email" placeholder="Email Address">
+        <p class="subtitle">Secure temporary storage (24h)</p>
+        
+        <input type="text" id="app-num" placeholder="Application Number (e.g., 220950)">
         <input type="password" id="password" placeholder="Password">
+        
         <button onclick="login()">Log In</button>
         <button class="secondary" onclick="register()">Create Account</button>
         <p id="auth-error" style="color: var(--danger); font-size: 0.9rem; margin-top: 10px;"></p>
@@ -99,24 +101,52 @@
     const auth = getAuth(app);
     const storage = getStorage(app);
 
+    // --- HELPER: ADD/REMOVE FAKE EMAIL DOMAIN ---
+    const DOMAIN = "@mit.app"; // Invisible domain
+
+    function getEmail(appNum) {
+        return appNum.trim() + DOMAIN;
+    }
+
+    function getAppNum(email) {
+        return email.replace(DOMAIN, "");
+    }
+
     // --- AUTH LOGIC ---
     window.login = async () => {
-        const email = document.getElementById('email').value;
+        const appNum = document.getElementById('app-num').value;
         const pass = document.getElementById('password').value;
+        
+        if(!appNum || !pass) {
+            document.getElementById('auth-error').innerText = "Please enter App Number and Password";
+            return;
+        }
+
         try {
-            await signInWithEmailAndPassword(auth, email, pass);
+            await signInWithEmailAndPassword(auth, getEmail(appNum), pass);
         } catch (error) {
-            document.getElementById('auth-error').innerText = error.message;
+            let msg = error.message;
+            if(msg.includes("invalid-email")) msg = "Invalid Application Number";
+            if(msg.includes("invalid-credential")) msg = "Wrong Number or Password";
+            document.getElementById('auth-error').innerText = msg;
         }
     };
 
     window.register = async () => {
-        const email = document.getElementById('email').value;
+        const appNum = document.getElementById('app-num').value;
         const pass = document.getElementById('password').value;
+
+        if(!appNum || !pass) {
+            document.getElementById('auth-error').innerText = "Please enter App Number and Password";
+            return;
+        }
+
         try {
-            await createUserWithEmailAndPassword(auth, email, pass);
+            await createUserWithEmailAndPassword(auth, getEmail(appNum), pass);
         } catch (error) {
-            document.getElementById('auth-error').innerText = error.message;
+            let msg = error.message;
+            if(msg.includes("email-already-in-use")) msg = "Account already exists! Try Logging in.";
+            document.getElementById('auth-error').innerText = msg;
         }
     };
 
@@ -127,12 +157,14 @@
         if (user) {
             document.getElementById('auth-view').classList.remove('visible');
             document.getElementById('app-view').classList.add('visible');
-            document.getElementById('user-display').innerText = user.email;
-            loadFiles(user.uid); // Load user's files
+            // Show only the App Number, not the fake email
+            document.getElementById('user-display').innerText = "App No: " + getAppNum(user.email);
+            loadFiles(user.uid);
         } else {
             document.getElementById('app-view').classList.remove('visible');
             document.getElementById('auth-view').classList.add('visible');
             document.getElementById('file-list').innerHTML = "";
+            document.getElementById('auth-error').innerText = "";
         }
     });
 
@@ -143,7 +175,6 @@
         const file = document.getElementById('file-input').files[0];
         if (!file) return;
 
-        // 25MB Limit Check
         if (file.size > 25 * 1024 * 1024) {
             alert("File is too big! Max 25MB.");
             return;
@@ -159,7 +190,6 @@
         const user = auth.currentUser;
         if (!user) return;
 
-        // Create a unique path: uploads/USER_ID/FILE_NAME
         const storageRef = ref(storage, `uploads/${user.uid}/${selectedFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
@@ -174,13 +204,12 @@
                 alert("Upload failed: " + error.message);
             }, 
             () => {
-                // Upload complete
                 alert("Upload Successful!");
                 document.getElementById('progress-container').style.display = 'none';
                 document.getElementById('upload-btn').style.display = 'none';
                 document.getElementById('selected-file').innerText = "";
                 selectedFile = null;
-                loadFiles(user.uid); // Refresh list
+                loadFiles(user.uid);
             }
         );
     };
