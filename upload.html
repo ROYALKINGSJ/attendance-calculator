@@ -43,7 +43,7 @@
             margin: 0;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Aligns to top to prevent jumping */
+            align-items: flex-start;
             min-height: 100vh;
             padding: 40px 20px;
             box-sizing: border-box;
@@ -56,13 +56,13 @@
             border-radius: 1rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             width: 100%;
-            max-width: 750px; /* Matched width */
+            max-width: 750px;
             position: relative;
             border: 1px solid var(--border-color);
-            min-height: 600px; /* Matched height */
+            min-height: 600px;
         }
 
-        /* --- HEADER (Exactly matching code.html) --- */
+        /* --- HEADER --- */
         .header-top { 
             display: flex; 
             justify-content: space-between; 
@@ -90,7 +90,7 @@
             border: 1px solid var(--border-color); 
             cursor: pointer; 
             color: var(--text-color); 
-            padding: 6px 12px; /* FIXED: Matches code.html */
+            padding: 6px 12px; 
             border-radius: 8px; 
             font-size: 0.85rem; 
             transition: all 0.2s;
@@ -101,20 +101,20 @@
         }
         .theme-toggle:hover, .btn-reset:hover { background: var(--input-bg); transform: translateY(-1px); border-color: var(--text-secondary); }
 
-        /* --- NAVIGATION TABS (Exactly matching code.html) --- */
+        /* --- NAVIGATION TABS --- */
         .nav-container {
             display: flex;
             background-color: var(--input-bg);
             padding: 5px;
             border-radius: 12px;
-            margin-bottom: 25px; /* FIXED: Matches code.html */
+            margin-bottom: 25px;
             border: 1px solid var(--border-color);
         }
 
         .nav-tab {
             flex: 1;
             text-align: center;
-            padding: 12px 0; /* FIXED: Matches code.html */
+            padding: 12px 0;
             font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-secondary);
@@ -134,7 +134,7 @@
             border: 1px solid var(--border-color);
         }
 
-        h1 { text-align: center; margin: 10px 0 5px 0; font-size: 2rem; letter-spacing: -0.5px; }
+        h1 { margin: 10px 0 5px 0; font-size: 2rem; text-align: center; letter-spacing: -0.5px; }
         .subtitle { text-align: center; color: var(--text-secondary); font-size: 1rem; margin-bottom: 25px; }
 
         /* --- CLOUD SPECIFIC STYLES --- */
@@ -289,7 +289,11 @@
 
     <div id="auth-view">
         <h1>🔐 Student Login</h1>
-        <p class="subtitle">Secure temporary storage (24h)<br>• Max 3 uploads per day •</p>
+        <p class="subtitle" style="margin-bottom: 10px;">Secure temporary storage (24h)<br>• Max 3 uploads per day •</p>
+        
+        <p style="color: var(--danger-color); font-size: 0.9rem; font-weight: 600; margin-bottom: 25px;">
+            ⚠️ Available only for F Section Students
+        </p>
         
         <input type="text" id="app-num" placeholder="Application Number (e.g. 125xxxxxx)">
         <input type="password" id="password" placeholder="Password">
