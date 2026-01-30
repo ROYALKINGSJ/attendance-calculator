@@ -6,7 +6,7 @@
     <title>Student Cloud Storage</title>
     <link rel="icon" href="https://fav.farm/☁️" />
     <style>
-        /* --- UNIFIED THEME VARIABLES (Matches Index/Code) --- */
+        /* --- UNIFIED THEME VARIABLES (Synced with index.html) --- */
         :root {
             /* Dark Mode (Default) */
             --bg-color: #0f172a;
@@ -111,15 +111,17 @@
             width: auto;
             margin: 0;
             opacity: 0.8;
+            transition: transform 0.3s ease;
         }
         .theme-toggle:hover { opacity: 1; transform: scale(1.1); background: transparent; }
 
         /* --- STORAGE BAR --- */
         .storage-info {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-size: 0.85rem;
             color: var(--text-secondary);
-            text-align: right;
+            display: flex;
+            justify-content: space-between;
         }
         .storage-track {
             width: 100%;
@@ -134,9 +136,8 @@
             height: 100%;
             background-color: var(--success-color);
             width: 0%;
-            transition: width 0.5s ease;
+            transition: width 0.5s ease, background-color 0.3s ease;
         }
-        /* Color changes as it gets full */
         .storage-fill.warning { background-color: #f59e0b; }
         .storage-fill.danger { background-color: var(--danger-color); }
 
@@ -147,6 +148,7 @@
             border-radius: 0.75rem;
             margin-bottom: 1.5rem;
             background-color: var(--input-bg);
+            transition: border-color 0.3s;
         }
         
         .file-list { margin-top: 1.5rem; text-align: left; max-height: 300px; overflow-y: auto; }
@@ -217,7 +219,10 @@
         <h1>☁️ My Cloud</h1>
         <p class="subtitle" id="user-display">Loading...</p>
 
-        <div class="storage-info" id="storage-text">0 MB / 25 MB used</div>
+        <div class="storage-info">
+            <span>Storage Used</span>
+            <span id="storage-text">0 MB / 25 MB</span>
+        </div>
         <div class="storage-track">
             <div class="storage-fill" id="storage-fill"></div>
         </div>
@@ -231,7 +236,7 @@
             <button onclick="uploadFile()" id="upload-btn" class="hidden" style="margin-top: 15px;">⬆️ Upload to Cloud</button>
         </div>
 
-        <h3 style="text-align: left; margin-bottom: 10px;">My Files</h3>
+        <h3 style="text-align: left; margin-bottom: 10px; color: var(--text-color);">My Files</h3>
         <div id="file-list" class="file-list">
             </div>
 
@@ -266,21 +271,27 @@
     const MAX_STORAGE_BYTES = 25 * 1024 * 1024; // 25 MB in Bytes
     let currentUsedBytes = 0;
 
-    // --- THEME SYNC ---
+    // --- THEME SYNC LOGIC (Matches index.html) ---
+    // 1. Check LocalStorage immediately on load
     const savedTheme = localStorage.getItem("theme") || "dark";
     document.documentElement.setAttribute("data-theme", savedTheme);
     updateThemeIcon(savedTheme);
 
+    // 2. Toggle Function (Saves to LocalStorage)
     window.toggleTheme = () => {
         const current = document.documentElement.getAttribute("data-theme");
         const newTheme = current === "light" ? "dark" : "light";
+        
         document.documentElement.setAttribute("data-theme", newTheme);
-        localStorage.setItem("theme", newTheme);
+        localStorage.setItem("theme", newTheme); // This updates the "global" preference
         updateThemeIcon(newTheme);
     }
-    function updateThemeIcon(theme) { document.getElementById("theme-icon").innerText = theme === "light" ? "🌙" : "☀️"; }
 
-    // --- AUTH ---
+    function updateThemeIcon(theme) {
+        document.getElementById("theme-icon").innerText = theme === "light" ? "🌙" : "☀️";
+    }
+
+    // --- AUTH LOGIC ---
     function getEmail(appNum) { return appNum.trim() + DOMAIN; }
     function getAppNum(email) { return email.replace(DOMAIN, ""); }
 
@@ -337,14 +348,26 @@
         const file = document.getElementById('file-input').files[0];
         if (!file) return;
         
-        // PRE-CHECK: Does this single file exceed remaining space?
-        if (currentUsedBytes + file.size > MAX_STORAGE_BYTES) {
+        // 1. CALCULATE EXPECTED TOTAL
+        // We use 'currentUsedBytes' which is a real Number calculated in loadFiles()
+        const expectedTotal = currentUsedBytes + file.size;
+
+        if (expectedTotal > MAX_STORAGE_BYTES) {
+            const usedMB = (currentUsedBytes / (1024*1024)).toFixed(2);
+            const newMB = (file.size / (1024*1024)).toFixed(2);
             const remainingMB = ((MAX_STORAGE_BYTES - currentUsedBytes) / (1024*1024)).toFixed(2);
-            alert(`⚠️ Not enough space!\n\nFile size: ${(file.size/(1024*1024)).toFixed(2)} MB\nSpace left: ${remainingMB} MB`);
+            
+            alert(`⚠️ STORAGE LIMIT EXCEEDED!\n\nCurrent Used: ${usedMB} MB\nThis File: ${newMB} MB\nSpace Left: ${remainingMB} MB\n\nYou cannot upload this file.`);
+            
+            // Clear the input
             document.getElementById('file-input').value = ""; 
+            selectedFile = null;
+            document.getElementById('selected-file').innerText = "";
+            document.getElementById('upload-btn').classList.add('hidden');
             return;
         }
         
+        // If passed, allow selection
         selectedFile = file;
         document.getElementById('selected-file').innerText = "Selected: " + file.name + ` (${(file.size/1024/1024).toFixed(2)} MB)`;
         document.getElementById('upload-btn').classList.remove('hidden');
@@ -355,9 +378,9 @@
         const user = auth.currentUser;
         if (!user) return;
 
-        // DOUBLE CHECK: Re-calculate total just in case
+        // Double check right before upload
         if (currentUsedBytes + selectedFile.size > MAX_STORAGE_BYTES) {
-             alert("⛔ Storage Limit Exceeded (25MB Total).");
+             alert("⛔ Storage Limit Exceeded.");
              return;
         }
 
@@ -394,7 +417,6 @@
         document.getElementById('progress-bar').style.width = '0%';
     }
 
-    // --- DELETE ---
     window.deleteFile = async (fileName) => {
         const user = auth.currentUser;
         if (!user || !confirm(`Delete "${fileName}"?`)) return;
@@ -408,7 +430,7 @@
         }
     }
 
-    // --- LOAD FILES & CALCULATE SIZE ---
+    // --- LOAD FILES & CALCULATE SIZE (FIXED) ---
     async function loadFiles(uid) {
         const listRef = ref(storage, `uploads/${uid}`);
         const listContainer = document.getElementById('file-list');
@@ -416,9 +438,8 @@
 
         try {
             const res = await listAll(listRef);
-            listContainer.innerHTML = "";
             
-            // 1. Get Metadata for ALL files to calculate total size
+            // 1. Get Metadata for ALL files
             const filePromises = res.items.map(async (itemRef) => {
                 const url = await getDownloadURL(itemRef);
                 const meta = await getMetadata(itemRef);
@@ -427,18 +448,21 @@
 
             const files = await Promise.all(filePromises);
 
-            // 2. Calculate Total Size
-            currentUsedBytes = files.reduce((acc, file) => acc + file.meta.size, 0);
+            // 2. Calculate Total Size CORRECTLY
+            // IMPORTANT: We wrap file.meta.size in Number() to avoid string concatenation issues
+            currentUsedBytes = files.reduce((acc, file) => acc + Number(file.meta.size), 0);
+            
             updateStorageUI();
 
             // 3. Render List
+            listContainer.innerHTML = "";
             if (files.length === 0) {
                 listContainer.innerHTML = '<div style="text-align:center; margin-top:20px; color:var(--text-secondary)">No files uploaded.</div>';
                 return;
             }
 
             files.forEach(file => {
-                const sizeMB = (file.meta.size / (1024 * 1024)).toFixed(2);
+                const sizeMB = (Number(file.meta.size) / (1024 * 1024)).toFixed(2);
                 listContainer.innerHTML += `
                     <div class="file-item">
                         <div style="flex-grow:1; display:flex; align-items:center;">
@@ -459,14 +483,16 @@
         const usedMB = (currentUsedBytes / (1024 * 1024)).toFixed(2);
         const percent = (currentUsedBytes / MAX_STORAGE_BYTES) * 100;
         
-        document.getElementById('storage-text').innerText = `${usedMB} MB / 25.00 MB used`;
+        document.getElementById('storage-text').innerText = `${usedMB} MB / 25.00 MB`;
         const fillBar = document.getElementById('storage-fill');
-        fillBar.style.width = percent + "%";
+        
+        // Cap visual width at 100%
+        fillBar.style.width = Math.min(percent, 100) + "%";
 
         // Change color based on usage
-        fillBar.className = "storage-fill"; // reset
+        fillBar.className = "storage-fill"; // reset classes
         if(percent > 80) fillBar.classList.add("warning");
-        if(percent > 95) fillBar.classList.add("danger");
+        if(percent >= 100) fillBar.classList.add("danger");
     }
 </script>
 </body>
