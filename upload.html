@@ -84,23 +84,21 @@
 </div>
 
 <script type="module">
-    // Import Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // YOUR CONFIG
+    // --- YOUR NEW CONFIG ---
     const firebaseConfig = {
-      apiKey: "AIzaSyCZGKhujRSWevfIIuGkDp1wXJ3ZpUgh_aM",
-      authDomain: "mit-student-hub.firebaseapp.com",
-      projectId: "mit-student-hub",
-      storageBucket: "mit-student-hub.firebasestorage.app",
-      messagingSenderId: "293801887483",
-      appId: "1:293801887483:web:31894382241e2535bcd25e"
+      apiKey: "AIzaSyDoQiGwshPRK-AJd8u7tPl3CZqb0ILZcpE",
+      authDomain: "mit-student-hub-2.firebaseapp.com",
+      projectId: "mit-student-hub-2",
+      storageBucket: "mit-student-hub-2.firebasestorage.app",
+      messagingSenderId: "853660811565",
+      appId: "1:853660811565:web:bc6660f73f8b88795c93a4"
     };
 
-    // Initialize Services
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const storage = getStorage(app);
@@ -108,78 +106,39 @@
 
     const DOMAIN = "@mit.app"; 
 
-    function getEmail(appNum) {
-        return appNum.trim() + DOMAIN;
-    }
+    function getEmail(appNum) { return appNum.trim() + DOMAIN; }
+    function getAppNum(email) { return email.replace(DOMAIN, ""); }
 
-    function getAppNum(email) {
-        return email.replace(DOMAIN, "");
-    }
-
-    // --- AUTH LOGIC ---
     window.login = async () => {
         const appNum = document.getElementById('app-num').value.trim();
         const pass = document.getElementById('password').value;
-        
-        if(!appNum || !pass) {
-            document.getElementById('auth-error').innerText = "Please enter App Number and Password";
-            return;
-        }
-
-        try {
-            await signInWithEmailAndPassword(auth, getEmail(appNum), pass);
-        } catch (error) {
-            let msg = error.message;
-            if(msg.includes("invalid-email")) msg = "Invalid Application Number";
-            if(msg.includes("invalid-credential")) msg = "Wrong Number or Password";
-            document.getElementById('auth-error').innerText = msg;
-        }
+        if(!appNum || !pass) { document.getElementById('auth-error').innerText = "Please enter App Number and Password"; return; }
+        try { await signInWithEmailAndPassword(auth, getEmail(appNum), pass); } 
+        catch (error) { document.getElementById('auth-error').innerText = "Invalid Login Details"; }
     };
 
     window.register = async () => {
         const appNum = document.getElementById('app-num').value.trim();
         const pass = document.getElementById('password').value;
         const btn = document.querySelector('button.secondary');
-
-        if(!appNum || !pass) {
-            document.getElementById('auth-error').innerText = "Please enter App Number and Password";
-            return;
-        }
-
-        btn.innerText = "Checking...";
-        btn.disabled = true;
-
+        if(!appNum || !pass) { document.getElementById('auth-error').innerText = "Please enter App Number and Password"; return; }
+        
+        btn.innerText = "Checking..."; btn.disabled = true;
         try {
-            // 1. CHECK WHITELIST IN FIRESTORE
-            // We look for a document where the ID matches the App Number
             const docRef = doc(db, "whitelist", appNum);
             const docSnap = await getDoc(docRef);
-
-            if (!docSnap.exists()) {
-                // Not found in database
-                throw new Error("⛔ This Application Number is not authorized.");
-            }
-
-            // 2. CREATE ACCOUNT
+            if (!docSnap.exists()) throw new Error("⛔ This Application Number is not authorized.");
             await createUserWithEmailAndPassword(auth, getEmail(appNum), pass);
-
         } catch (error) {
             let msg = error.message;
             if(msg.includes("email-already-in-use")) msg = "Account already exists! Try Logging in.";
             if(msg.includes("weak-password")) msg = "Password must be at least 6 characters.";
-            // If it's our custom error, show it directly
-            if (msg.includes("authorized")) msg = error.message;
-            
             document.getElementById('auth-error').innerText = msg;
-        } finally {
-            btn.innerText = "Create Account";
-            btn.disabled = false;
-        }
+        } finally { btn.innerText = "Create Account"; btn.disabled = false; }
     };
 
     window.logout = () => signOut(auth);
 
-    // Monitor Login State
     onAuthStateChanged(auth, (user) => {
         if (user) {
             document.getElementById('auth-view').classList.remove('visible');
@@ -190,22 +149,14 @@
             document.getElementById('app-view').classList.remove('visible');
             document.getElementById('auth-view').classList.add('visible');
             document.getElementById('file-list').innerHTML = "";
-            document.getElementById('auth-error').innerText = "";
         }
     });
 
-    // --- UPLOAD LOGIC ---
     let selectedFile = null;
-
     window.handleFileSelect = () => {
         const file = document.getElementById('file-input').files[0];
         if (!file) return;
-
-        if (file.size > 25 * 1024 * 1024) {
-            alert("File is too big! Max 25MB.");
-            return;
-        }
-        
+        if (file.size > 25 * 1024 * 1024) { alert("File is too big! Max 25MB."); return; }
         selectedFile = file;
         document.getElementById('selected-file').innerText = file.name;
         document.getElementById('upload-btn').style.display = 'block';
@@ -215,58 +166,30 @@
         if (!selectedFile) return;
         const user = auth.currentUser;
         if (!user) return;
-
         const storageRef = ref(storage, `uploads/${user.uid}/${selectedFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, selectedFile);
-
         document.getElementById('progress-container').style.display = 'block';
-
         uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                document.getElementById('progress-bar').style.width = progress + '%';
-            }, 
-            (error) => {
-                alert("Upload failed: " + error.message);
-            }, 
-            () => {
-                alert("Upload Successful!");
-                document.getElementById('progress-container').style.display = 'none';
-                document.getElementById('upload-btn').style.display = 'none';
-                document.getElementById('selected-file').innerText = "";
-                selectedFile = null;
-                loadFiles(user.uid);
-            }
+            (snapshot) => { document.getElementById('progress-bar').style.width = (snapshot.bytesTransferred / snapshot.totalBytes) * 100 + '%'; }, 
+            (error) => { alert("Upload failed: " + error.message); }, 
+            () => { alert("Upload Successful!"); document.getElementById('progress-container').style.display = 'none'; document.getElementById('upload-btn').style.display = 'none'; selectedFile = null; loadFiles(user.uid); }
         );
     };
 
-    // --- LIST FILES LOGIC ---
     function loadFiles(uid) {
         const listRef = ref(storage, `uploads/${uid}`);
         const listContainer = document.getElementById('file-list');
         listContainer.innerHTML = '<div style="text-align:center; color:#666">Loading...</div>';
-
         listAll(listRef).then((res) => {
             listContainer.innerHTML = "";
-            if (res.items.length === 0) {
-                listContainer.innerHTML = '<div style="text-align:center; color:#666">No files yet.</div>';
-                return;
-            }
-
+            if (res.items.length === 0) { listContainer.innerHTML = '<div style="text-align:center; color:#666">No files yet.</div>'; return; }
             res.items.forEach((itemRef) => {
                 getDownloadURL(itemRef).then((url) => {
-                    listContainer.innerHTML += `
-                        <div class="file-item">
-                            <a href="${url}" target="_blank" class="file-link">📄 ${itemRef.name}</a>
-                        </div>`;
+                    listContainer.innerHTML += `<div class="file-item"><a href="${url}" target="_blank" class="file-link">📄 ${itemRef.name}</a></div>`;
                 });
             });
-        }).catch((error) => {
-            console.error(error);
-            listContainer.innerHTML = '<div style="text-align:center; color:red">Error loading files</div>';
-        });
+        }).catch((error) => { console.error(error); listContainer.innerHTML = '<div style="text-align:center; color:red">Error loading files</div>'; });
     }
 </script>
-
 </body>
 </html>
